@@ -1,14 +1,9 @@
+path = require 'path'
+glob = require 'glob'
 java = require 'java'
 xml2js = require 'xml2js'
 
 java.options.push '-Xmx4g'
-
-java.classpath.push "#{__dirname}/../jar/ejml-0.23.jar"
-java.classpath.push "#{__dirname}/../jar/joda-time.jar"
-java.classpath.push "#{__dirname}/../jar/jollyday.jar"
-java.classpath.push "#{__dirname}/../jar/xom.jar"
-java.classpath.push "#{__dirname}/../jar/stanford-corenlp-3.3.1-models.jar"
-java.classpath.push "#{__dirname}/../jar/stanford-corenlp-3.3.1.jar"
 
 
 getParsedTree = require './getParsedTree'
@@ -26,14 +21,36 @@ class StanfordSimpleNLP
       'dcoref'
     ]
 
+  requiredJars: [
+    'ejml-*.jar'
+    'joda-time.jar'
+    'jollyday.jar'
+    'xom.jar'
+    'stanford-corenlp-*-models.jar'
+    'stanford-corenlp-*+(0|1|2|3|4|5|6|7|8|9).jar'
+  ]
 
   constructor: (options, callback) ->
     if typeof options is 'function'
       callback = options
       options = null
 
+    @populateJavaClasspath()
+
     if callback? and typeof callback is 'function'
       @loadPipeline options, callback
+
+
+  populateJavaClasspath: ->
+    jarDir = path.join __dirname, '..', 'jar'
+    for requiredJar in @requiredJars
+      foundJars = glob.sync requiredJar, cwd: jarDir
+      if foundJars.length == 0
+        throw new Error "Required jar #{requiredJar} not found in #{jarDir}: did you download and extract Stanford CoreNLP?"
+      else if foundJars.length > 1
+        throw new Error "There are more than one version of #{requiredJar} in #{jarDir}: please remove the ones you don't want to use"
+      else
+        java.classpath.push path.join jarDir, foundJars[0]
 
 
   loadPipeline: (options, callback) ->
