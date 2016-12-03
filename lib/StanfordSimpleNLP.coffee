@@ -41,7 +41,7 @@ class StanfordSimpleNLP
 
 
   populateJavaClasspath: (maybeJarDir, callback) ->
-    jarDir = if maybeJarDir then maybeJarDir else path.join __dirname, '..', 'jar'
+    jarDir = if maybeJarDir then path.resolve maybeJarDir else path.join __dirname, '..', 'jar'
     unless callback?
       callback = (err) ->
         throw err if err?
