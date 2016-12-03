@@ -1,0 +1,36 @@
+dist: trusty
+sudo: false
+language: node_js
+node_js:
+  - node
+cache:
+  directories:
+    - jar
+env:
+  - JDK_VERSION=oraclejdk7 CORENLP_VERSION=2014-01-04 # 3.3.1
+  - JDK_VERSION=oraclejdk7 CORENLP_VERSION=2014-06-16 # 3.4
+  - JDK_VERSION=oraclejdk7 CORENLP_VERSION=2014-08-27 # 3.4.1
+  - JDK_VERSION=oraclejdk8 CORENLP_VERSION=2014-10-31 # 3.5.0
+  - JDK_VERSION=oraclejdk8 CORENLP_VERSION=2015-01-29 # 3.5.1
+  - JDK_VERSION=oraclejdk8 CORENLP_VERSION=2015-04-20 # 3.5.2
+  - JDK_VERSION=oraclejdk8 CORENLP_VERSION=2015-12-09 # 3.6.0
+  - JDK_VERSION=oraclejdk8 CORENLP_VERSION=2016-10-31 # 3.7.0 (beta)
+
+before_install:
+  - jdk_switcher use $JDK_VERSION
+#  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+#  - sudo apt-get -qq update
+#  - sudo apt-get install -y gcc-5 g++-5
+#  - export CC=/usr/bin/gcc-5 CXX=/usr/bin/g++-5
+
+before_script:
+  - ls jar/*.jar || (
+    curl -sO http://nlp.stanford.edu/software/stanford-corenlp-full-$CORENLP_VERSION.zip
+    && rm -rf jar stanford-corenlp-full-$CORENLP_VERSION
+    && unzip stanford-corenlp-full-$CORENLP_VERSION.zip
+    && ls
+    && mv stanford-corenlp-full-$CORENLP_VERSION jar)
+  - java -version
+
+notifications:
+  email: false
