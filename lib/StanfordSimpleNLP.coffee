@@ -36,48 +36,53 @@ class StanfordSimpleNLP
       callback = options
       options = null
 
-    @populateJavaClasspath(options?.path)
-
     if callback? and typeof callback is 'function'
       @loadPipeline options, callback
 
 
-  populateJavaClasspath: (maybeJarDir) ->
+  populateJavaClasspath: (maybeJarDir, callback) ->
     jarDir = if maybeJarDir then maybeJarDir else path.join __dirname, '..', 'jar'
+    unless callback?
+      callback = (err) ->
+        throw err if err?
     for requiredJar in @requiredJars
       foundJars = glob.sync requiredJar, cwd: jarDir
       if foundJars.length == 0
-        throw new Error "Required jar #{requiredJar} not found in #{jarDir}: did you download and extract Stanford CoreNLP?"
+        return callback new Error "Required jar #{requiredJar} not found in #{jarDir}: did you download and extract Stanford CoreNLP?"
       else if foundJars.length > 1
-        throw new Error "There are more than one version of #{requiredJar} in #{jarDir}: please remove the ones you don't want to use"
+        return callback new Error "There are more than one version of #{requiredJar} in #{jarDir}: please remove the ones you don't want to use"
       else
         java.classpath.push path.join jarDir, foundJars[0]
 
+    callback()
 
   loadPipeline: (options, callback) ->
     if typeof options is 'function'
       callback = options
-      options = @defaultOptions
-    else if not options?
-      options = @defaultOptions
-    else
-      if not options.annotators? or not Array.isArray(options.annotators)
-        return callback new Error 'No annotators.'
+      options = null
 
-    java.newInstance 'java.util.Properties', (err, properties) =>
-      properties.setProperty 'annotators', options.annotators.join(', '), (err) =>
-        return callback err  if err?
+    options = lodash.assign {}, @defaultOptions, options
+    if not options.annotators? or not Array.isArray(options.annotators)
+      return callback new Error 'No annotators.'
 
-        java.newInstance 'edu.stanford.nlp.pipeline.StanfordCoreNLP', properties, (err, pipeline) =>
+    @populateJavaClasspath options.path, (err) =>
+      return callback err if err?
+
+      java.newInstance 'java.util.Properties', (err, properties) =>
+        properties.setProperty 'annotators', options.annotators.join(', '), (err) =>
           return callback err  if err?
-          
-          @pipeline = pipeline
-          callback null
+
+          java.newInstance 'edu.stanford.nlp.pipeline.StanfordCoreNLP', properties, (err, pipeline) =>
+            return callback err  if err?
+
+            @pipeline = pipeline
+            callback null
 
 
   loadPipelineSync: (options) ->
-    options = @defaultOptions  if not options?
+    options = lodash.assign {}, @defaultOptions, options
 
+    @populateJavaClasspath options.path
     properties = java.newInstanceSync 'java.util.Properties'
     properties.setPropertySync 'annotators', options.annotators.join(', ')
     @pipeline = java.newInstanceSync 'edu.stanford.nlp.pipeline.StanfordCoreNLP', properties
@@ -102,7 +107,7 @@ class StanfordSimpleNLP
 
         @pipeline.xmlPrint annotation, stringWriter, (err) =>
           return callback err  if err?
-      
+
           stringWriter.toString (err, xmlString) =>
             return callback err  if err?
 

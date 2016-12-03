@@ -10,6 +10,7 @@
     "coffee-script": "~1.7.1",
     "glob": "^7.1.1",
     "java": "~0.8.0",
+    "lodash": "^4.17.2",
     "xml2js": "~0.2.8"
   },
   "readmeFilename": "README.md",
