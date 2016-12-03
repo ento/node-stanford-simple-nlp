@@ -1,5 +1,6 @@
 path = require 'path'
 glob = require 'glob'
+lodash = require 'lodash'
 java = require 'java'
 xml2js = require 'xml2js'
 
@@ -35,14 +36,14 @@ class StanfordSimpleNLP
       callback = options
       options = null
 
-    @populateJavaClasspath()
+    @populateJavaClasspath(options?.path)
 
     if callback? and typeof callback is 'function'
       @loadPipeline options, callback
 
 
-  populateJavaClasspath: ->
-    jarDir = path.join __dirname, '..', 'jar'
+  populateJavaClasspath: (maybeJarDir) ->
+    jarDir = if maybeJarDir then maybeJarDir else path.join __dirname, '..', 'jar'
     for requiredJar in @requiredJars
       foundJars = glob.sync requiredJar, cwd: jarDir
       if foundJars.length == 0

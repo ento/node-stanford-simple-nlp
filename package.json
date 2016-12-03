@@ -22,8 +22,9 @@
     "url": "https://github.com/xissy/node-stanford-simple-nlp/issues"
   },
   "devDependencies": {
+    "mocha": "~1.12.0",
     "should": "~1.2.2",
-    "mocha": "~1.12.0"
+    "tmp": "0.0.31"
   },
   "directories": {
     "test": "test"
