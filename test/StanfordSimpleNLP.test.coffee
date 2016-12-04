@@ -52,6 +52,11 @@ describe 'standfordSimpleNlpModule', ->
             err.should.match /more than one version/
             done()
 
+      it 'should fail on invalid java module', (done) ->
+        stanfordSimpleNLP.loadPipeline {java: ""}, (err) ->
+          err.should.match /look like a java module/
+          done()
+
     describe '.loadPipelineSync(...)', ->
       it 'should be done', ->
         stanfordSimpleNLP.loadPipelineSync()
